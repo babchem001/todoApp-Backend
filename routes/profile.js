@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + "-" + uniqueSuffix + ext); // Append extension;
   },
 });
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
     const allowedTypes = /jpeg|jpg|png/;
@@ -33,10 +33,9 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error("Invalid file type, only JPEG and PNG images are allowed"));
-      
     }
-  }
- });
+  },
+});
 
 // Endpoint for handling file uploads
 router.post(
@@ -67,7 +66,6 @@ router.post(
     }
   }
 );
-
 
 // Route to Update file
 const fs = require("fs");
@@ -118,9 +116,6 @@ router.put(
   }
 );
 
-
-
-
 //get user profile
 router.get("/", authProtect, async (req, res, next) => {
   try {
@@ -152,6 +147,8 @@ router.get("/", authProtect, async (req, res, next) => {
     const profileImage = `${req.protocol}://${req.get("host")}/${
       profile.avatar
     }`;
+    console.log("Avatar path from DB:", profile.avatar);
+    console.log("Full image URL:", profileImage);
 
     return res.status(200).json({
       message: "profile fetched successfully",
