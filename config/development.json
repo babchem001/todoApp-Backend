@@ -1,0 +1,6 @@
+{
+    "Appname": "Todo App - Development",
+    "serverUrl": "http://localhost:8000",
+    "PORT": 8000,
+    "jwtSecret": "w3ae4sr5d6tf7y89u0iouyftdrexrcftvgbyhunjimjhugyft"
+}
