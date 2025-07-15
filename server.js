@@ -23,7 +23,7 @@ app.use("/user", user);
 app.use("/profile", profile);
 app.use("/todo", todo);
 app.use("/auth", auth);
-app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/avatar", express.static(path.join(__dirname, "public/avatar")));
 
 // app.get("/", (req, res) => {
 //     res.send('Hello World!');

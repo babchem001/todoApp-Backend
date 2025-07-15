@@ -24,7 +24,19 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + "-" + uniqueSuffix + ext); // Append extension;
   },
 });
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png/;
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type, only JPEG and PNG images are allowed"));
+      
+    }
+  }
+ });
 
 // Endpoint for handling file uploads
 router.post(
@@ -97,7 +109,7 @@ router.put(
 
       return res.status(200).json({
         message: "Avatar updated successfully",
-        avatar: `/public/avatar/${file.filename}`,
+        avatar: `avatar/${file.filename}`,
         updated,
       });
     } catch (error) {
