@@ -13,52 +13,44 @@ const authProtect = require("../middleware/auth");
 
 //Multer storage config
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/avatar"); // Destination folder for uploaded files
+  destination: (req, file, cb) => {
+    cb(null, "public/avatar");
   },
-  filename: function (req, file, cb) {
-    // cb(null, "public/avatar"); // Destination folder for uploaded files
-    // Use a unique filename for the uploaded file
+  filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname); // Get file extension
-    cb(null, file.fieldname + "-" + uniqueSuffix + ext); // Append extension;
-  },
-});
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png/;
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.test(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type, only JPEG and PNG images are allowed"));
-    }
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
 
-// Endpoint for handling file uploads
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.test(ext)) cb(null, true);
+    else cb(new Error("Only JPEG and PNG files are allowed"));
+  },
+});
+
+// Upload new avatar
 router.post(
   "/upload",
-  [authProtect],
-  upload.single("image"), // Specify the field name for the uploaded file and it should be same as key in postman or frontend input in form
+  authProtect,
+  upload.single("image"),
   async (req, res, next) => {
-    // console.log("running");
-    console.log(req.file);
     try {
-      const { destination, filename } = req.file;
+      const { filename } = req.file;
+      const userId = Number(req.user.sub);
+
       const profile = await prisma.profile.update({
-        where: {
-          userId: Number(req.user.sub),
-        },
-        data: {
-          avatar: `${destination}/${filename}`,
-        },
+        where: { userId },
+        data: { avatar: `avatar/${filename}` },
       });
-      // Access uploaded file information through req.file
+
       return res.json({
         message: "File uploaded successfully",
-        image: filename,
+        avatar: `avatar/${filename}`,
       });
     } catch (error) {
       console.error("Upload error", error);
@@ -67,42 +59,35 @@ router.post(
   }
 );
 
-// Route to Update file
-const fs = require("fs");
-// const path = require("path");
-
+// Update avatar (replace old one)
 router.put(
   "/updateavatar",
   authProtect,
-  upload.single("image"), // field name must match frontend
+  upload.single("image"),
   async (req, res, next) => {
     try {
       const { file } = req;
-
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      // Find current profile
       const userId = Number(req.user.sub);
+
+      if (!file) return res.status(400).json({ message: "No file uploaded" });
+
       const currentProfile = await prisma.profile.findUnique({
         where: { userId },
       });
 
-      // Delete old avatar if it exists
-      if (currentProfile.avatar) {
-        const oldAvatarPath = path.join(__dirname, "..", currentProfile.avatar);
-        if (fs.existsSync(oldAvatarPath)) {
-          fs.unlinkSync(oldAvatarPath); // delete the old file
-        }
+      if (currentProfile?.avatar) {
+        const oldPath = path.join(
+          __dirname,
+          "..",
+          "public",
+          currentProfile.avatar
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
 
-      // Save new avatar path
       const updated = await prisma.profile.update({
         where: { userId },
-        data: {
-          avatar: `public/avatar/${file.filename}`,
-        },
+        data: { avatar: `avatar/${file.filename}` },
       });
 
       return res.status(200).json({
@@ -116,47 +101,36 @@ router.put(
   }
 );
 
-//get user profile
+// Get profile (with full avatar URL)
 router.get("/", authProtect, async (req, res, next) => {
   try {
-    const { sub } = req.user;
+    const userId = Number(req.user.sub);
 
     const profile = await prisma.profile.findFirst({
-      where: {
-        userId: Number(sub),
-      },
+      where: { userId },
       select: {
         bio: true,
         name: true,
         avatar: true,
-        user: {
-          select: {
-            email: true,
-          },
-        },
+        user: { select: { email: true } },
       },
     });
 
     if (!profile) {
-      return res.status(400).json({
-        message: "profile not found",
-      });
+      return res.status(404).json({ message: "Profile not found" });
     }
 
-    // Store full URL instead of local path
-    const profileImage = `https://${req.get("host")}/${profile.avatar}`;
-    console.log("Avatar path from DB:", profile.avatar);
-    console.log("Full image URL:", profileImage);
+    const fullAvatarUrl = profile.avatar
+      ? `${req.protocol}://${req.get("host")}/${profile.avatar}`
+      : "";
 
     return res.status(200).json({
-      message: "profile fetched successfully",
+      message: "Profile fetched successfully",
       profile: {
         name: profile.name,
         bio: profile.bio,
-        avatar: profileImage,
-        user: {
-          email: profile.user.email,
-        },
+        avatar: fullAvatarUrl,
+        user: { email: profile.user.email },
       },
     });
   } catch (error) {
@@ -164,41 +138,26 @@ router.get("/", authProtect, async (req, res, next) => {
   }
 });
 
-//update user profile
+// Update bio
 router.put("/update", authProtect, async (req, res, next) => {
   try {
     const { bio } = req.body;
+    const userId = Number(req.user.sub);
 
-    const profile = await prisma.profile.findUnique({
-      where: {
-        userId: Number(req.user.sub),
-      },
+    const existingProfile = await prisma.profile.findUnique({
+      where: { userId },
     });
-
-    if (!profile) {
-      return res.status(400).json({
-        message: "profile not found",
-      });
+    if (!existingProfile) {
+      return res.status(404).json({ message: "Profile not found" });
     }
 
     const updatedProfile = await prisma.profile.update({
-      where: {
-        id: Number(profile.id),
-        userId: Number(req.user.sub),
-      },
-      data: {
-        bio: bio,
-      },
+      where: { userId },
+      data: { bio },
     });
 
-    if (!updatedProfile) {
-      return res.status(400).json({
-        message: "profile not updated",
-      });
-    }
-
     return res.status(200).json({
-      message: "profile updated successfully",
+      message: "Profile updated successfully",
       updatedProfile,
     });
   } catch (error) {
