@@ -1,38 +1,41 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
-const config = require("config");
-
 const app = express();
+const config = require("config");
 const port = config.get("PORT") || 8000;
 
 console.log(config.get("Appname"));
 
-// Middleware
-app.use(cors());
+// body parser
 app.use(express.json());
+app.use(cors());
 
-// Serve static files from avatar folder
-app.use("/avatar", express.static(path.join(__dirname, "public/avatar")));
-
-// Routes
+// import route files
 const error = require("./middleware/error");
 const user = require("./routes/user");
 const profile = require("./routes/profile");
 const todo = require("./routes/todo");
 const auth = require("./routes/auth");
+const path = require("path");
 
+// main routes
 app.use("/user", user);
 app.use("/profile", profile);
 app.use("/todo", todo);
 app.use("/auth", auth);
 
-// Error handler
+// Serve avatar images statically
+app.use(
+  "/public/avatar",
+  express.static(path.join(__dirname, "public/avatar"))
+);
+
+// error handler middleware
 app.use(error);
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+app.listen(port, () =>
+  console.log(`Todo app listening at http://localhost:${port}`)
+);
 
 module.exports = app;
