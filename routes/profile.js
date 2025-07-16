@@ -144,9 +144,7 @@ router.get("/", authProtect, async (req, res, next) => {
     }
 
     // Store full URL instead of local path
-    const profileImage = `${req.protocol}://${req.get("host")}/${
-      profile.avatar
-    }`;
+    const profileImage = `https://${req.get("host")}/${profile.avatar}`;
     console.log("Avatar path from DB:", profile.avatar);
     console.log("Full image URL:", profileImage);
 
