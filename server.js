@@ -17,12 +17,14 @@ const profile = require("./routes/profile");
 const todo = require("./routes/todo");
 const auth = require("./routes/auth");
 const path = require("path");
+const wallet = require("./routes/wallet");
 
 // main routes
 app.use("/user", user);
 app.use("/profile", profile);
 app.use("/todo", todo);
 app.use("/auth", auth);
+app.use("/wallet", wallet);
 
 // Serve avatar images statically
 app.use(

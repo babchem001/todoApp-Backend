@@ -42,6 +42,8 @@ model User{
   // Relationship linkage
   todos Todo[]
   profiles Profile?
+  wallet Wallet?
+
 
   @@map("users")
 }
@@ -58,4 +60,29 @@ model Profile{
   user User @relation(fields: [userId], references: [id])
 
   @@map("profiles")
+}
+model Wallet{
+  id Int @id @default(autoincrement())
+  balance Decimal @db.Decimal(10, 2) @default(0.00)
+  userId  Int @unique
+  user User @relation(fields: [userId], references: [id])
+
+  transactionsSent Transaction[] @relation("Sender")
+  transactionsReceived Transaction[] @relation("Receiver")
+
+  @@map("wallets")
+
+}
+model Transaction{
+  id Int @id @default(autoincrement())
+  amount Decimal @db.Decimal(10, 2) @default(0.00)
+  type String // "send" | "receive" | "fund"
+  fromId Int? // null if it's a funding transaction
+  toId Int? // null if money was withdrawn
+  createdAt DateTime @default(now())
+
+  sender Wallet? @relation("Sender", fields: [fromId], references: [id])
+  receiver Wallet? @relation("Receiver", fields: [toId], references: [id])
+
+  @@map("transactions")
 }

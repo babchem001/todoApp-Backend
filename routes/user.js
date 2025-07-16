@@ -11,6 +11,7 @@ const authAdmin = require("../middleware/authIsAdmin");
 const userSchema = require("../prisma/joischema/prismajoi");
 
 const argon2 = require("argon2");
+const { Prisma } = require("@prisma/client");
 
 router.post("/register", async (req, res) => {
   try {
@@ -67,6 +68,11 @@ router.post("/register", async (req, res) => {
         name: name,
         email: email,
         password: hashedPassword,
+        wallet: {
+          create: {
+            balance: new Prisma.Decimal("0.00"),
+          },
+        }
       },
     });
     if (!aUser) {
