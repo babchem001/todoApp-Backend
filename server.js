@@ -8,7 +8,12 @@ console.log(config.get("Appname"));
 
 // body parser
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://todo-app-frontend-sable-theta.vercel.app/",
+    credentials: true,
+  })
+);
 
 // import route files
 const error = require("./middleware/error");
