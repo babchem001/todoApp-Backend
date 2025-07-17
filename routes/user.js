@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { Decimal } = require("@prisma/client/runtime/library");
 
 const prisma = require("../lib/prisma");
 
@@ -70,7 +71,7 @@ router.post("/register", async (req, res) => {
         password: hashedPassword,
         wallet: {
           create: {
-            balance: new Prisma.Decimal("0.00"),
+            balance: new Decimal("0.00"),
           },
         }
       },

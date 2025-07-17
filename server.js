@@ -14,15 +14,7 @@ const allowedOrigins = [
   "https://todo-app-frontend-sable-theta.vercel.app/",
 ];
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
+  cors()
 );
 
 // import route files

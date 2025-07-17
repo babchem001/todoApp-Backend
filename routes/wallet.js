@@ -7,7 +7,7 @@ const authProtect = require("../middleware/auth");
 // GET /wallet - Get wallet and transactions
 router.get("/", authProtect, async (req, res) => {
   try {
-    console.log("Token:", token);
+    // console.log("Token:", token);
 
     const userId = Number(req.user.sub);
 
