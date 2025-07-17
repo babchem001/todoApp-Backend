@@ -8,9 +8,19 @@ console.log(config.get("Appname"));
 
 // body parser
 app.use(express.json());
+
+const allowedOrigins = [
+  "http://localhost:8000",
+  "https://todo-app-frontend-sable-theta.vercel.app/",
+];
 app.use(
   cors({
-    origin: "https://todo-app-frontend-sable-theta.vercel.app/",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );

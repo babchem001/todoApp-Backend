@@ -7,6 +7,8 @@ const authProtect = require("../middleware/auth");
 // GET /wallet - Get wallet and transactions
 router.get("/", authProtect, async (req, res) => {
   try {
+    console.log("Token:", token);
+
     const userId = Number(req.user.sub);
 
     let wallet = await prisma.wallet.findUnique({
@@ -43,6 +45,8 @@ router.put("/fundwallet", authProtect, async (req, res) => {
   try {
     const { amount } = req.body;
     const userId = Number(req.user.sub);
+    console.log("User:", req.user);
+
 
     if (!amount || isNaN(amount) || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
